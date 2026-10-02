@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const player = new MorseAudioPlayer();
 
-  let currentFormat = 'morse';
+  let currentFormat = 'alien';
 
   function showToast(message) {
     if (!toast) return;
