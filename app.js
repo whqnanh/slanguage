@@ -345,6 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const decodeInput = document.getElementById('decodeInput');
   const decodeOutput = document.getElementById('decodeOutput');
   const detectedTypeBadge = document.getElementById('detectedTypeBadge');
+  const btnPiP = document.getElementById('btnPiP');
+  const pipCanvas = document.getElementById('pipCanvas');
+  const pipVideo = document.getElementById('pipVideo');
 
   const player = new MorseAudioPlayer();
 
@@ -367,6 +370,122 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function drawPipCanvas() {
+    if (!pipCanvas) return;
+    const ctx = pipCanvas.getContext('2d');
+    const w = pipCanvas.width;
+    const h = pipCanvas.height;
+
+    // Dark sleek background
+    ctx.fillStyle = '#0b0f17';
+    ctx.fillRect(0, 0, w, h);
+
+    // Border
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1, 1, w - 2, h - 2);
+
+    // Title
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 20px "JetBrains Mono", monospace, sans-serif';
+    ctx.fillText('+slanguage', 24, 38);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText('Cửa sổ nổi theo dõi mã hóa', 180, 36);
+
+    // Separator line
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(24, 52);
+    ctx.lineTo(w - 24, 52);
+    ctx.stroke();
+
+    const text = (sourceInput ? sourceInput.value.trim() : '') || '(Chưa có nội dung)';
+    const morse = (outputMorse && !outputMorse.classList.contains('empty') ? outputMorse.textContent.trim() : '---');
+    const binary = (outputBinary && !outputBinary.classList.contains('empty') ? outputBinary.textContent.trim() : '---');
+    const b64 = (outputBase64 && !outputBase64.classList.contains('empty') ? outputBase64.textContent.trim() : '---');
+    const decoded = (decodeOutput ? decodeOutput.value.trim() : '');
+
+    let y = 88;
+    function drawLine(label, val, color, font) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText(label, 24, y);
+
+      ctx.fillStyle = color;
+      ctx.font = font;
+      const display = val.length > 55 ? val.slice(0, 52) + '...' : val;
+      ctx.fillText(display, 24, y + 22);
+      y += 54;
+    }
+
+    drawLine('VĂN BẢN:', text, '#f8fafc', 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif');
+    drawLine('MORSE:', morse, '#38bdf8', '14px "JetBrains Mono", monospace');
+    drawLine('NHỊ PHÂN:', binary, '#c084fc', '13px "JetBrains Mono", monospace');
+    drawLine('BASE64:', b64, '#34d399', '14px "JetBrains Mono", monospace');
+
+    if (decoded) {
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      const decDisplay = decoded.length > 46 ? decoded.slice(0, 43) + '...' : decoded;
+      ctx.fillText('GIẢI MÃ: ' + decDisplay, 24, h - 14);
+    }
+  }
+
+  let pipStream = null;
+  async function togglePictureInPicture() {
+    if (!pipVideo || !pipCanvas) return;
+
+    drawPipCanvas();
+
+    // Nếu đang ở chế độ PiP thì tắt
+    if (document.pictureInPictureElement) {
+      try {
+        await document.exitPictureInPicture();
+      } catch (e) {}
+      return;
+    }
+    if (pipVideo.webkitPresentationMode === 'picture-in-picture') {
+      try {
+        pipVideo.webkitSetPresentationMode('inline');
+      } catch (e) {}
+      return;
+    }
+
+    if (!pipStream) {
+      if (pipCanvas.captureStream) {
+        pipStream = pipCanvas.captureStream(15);
+      } else if (pipCanvas.mozCaptureStream) {
+        pipStream = pipCanvas.mozCaptureStream(15);
+      }
+    }
+
+    if (!pipStream) {
+      showToast('Trình duyệt chưa hỗ trợ phát stream video PiP.');
+      return;
+    }
+
+    pipVideo.srcObject = pipStream;
+
+    try {
+      await pipVideo.play();
+      if (pipVideo.requestPictureInPicture) {
+        await pipVideo.requestPictureInPicture();
+        showToast('Đã mở cửa sổ nổi');
+      } else if (pipVideo.webkitSetPresentationMode) {
+        pipVideo.webkitSetPresentationMode('picture-in-picture');
+        showToast('Đã mở cửa sổ nổi trên iPhone');
+      } else {
+        showToast('Thiết bị chưa hỗ trợ Picture-in-Picture');
+      }
+    } catch (err) {
+      console.error('Lỗi PiP:', err);
+      showToast('Không thể bật PiP: ' + (err.message || 'Hãy chạm màn hình và thử lại'));
+    }
+  }
+
   function updateEncodings() {
     const text = sourceInput.value;
     const mode = morseVietnameseMode.value;
@@ -376,6 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setOutput(outputBinary, '');
       setOutput(outputBase64, '');
       setOutput(outputHex, '');
+      drawPipCanvas();
       return;
     }
 
@@ -384,11 +504,11 @@ document.addEventListener('DOMContentLoaded', () => {
       setOutput(outputBinary, textToBinary(text));
       setOutput(outputBase64, textToBase64(text));
       setOutput(outputHex, textToHex(text));
+      drawPipCanvas();
     } catch (err) {
       console.error('Lỗi khi mã hóa:', err);
     }
   }
-
 
   function handleDecoderInput() {
     const input = decodeInput.value;
@@ -400,12 +520,16 @@ document.addEventListener('DOMContentLoaded', () => {
       detectedTypeBadge.classList.remove('active');
     }
     decodeOutput.value = result;
+    drawPipCanvas();
   }
 
   // Lắng nghe sự kiện gõ phím
   sourceInput.addEventListener('input', updateEncodings);
   morseVietnameseMode.addEventListener('change', updateEncodings);
   decodeInput.addEventListener('input', handleDecoderInput);
+  if (btnPiP) {
+    btnPiP.addEventListener('click', togglePictureInPicture);
+  }
 
   // Nút tiện ích
   btnClear.addEventListener('click', () => {
