@@ -317,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const morseVietnameseMode = document.getElementById('morseVietnameseMode');
   const btnClear = document.getElementById('btnClear');
   const btnPaste = document.getElementById('btnPaste');
-  const btnSample = document.getElementById('btnSample');
 
   const activeOutput = document.getElementById('activeOutput');
   const outputFormatDesc = document.getElementById('outputFormatDesc');
@@ -509,10 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  btnSample.addEventListener('click', () => {
-    sourceInput.value = 'Xin chào Việt Nam! Chúc một ngày tốt lành.';
-    updateActiveOutput();
-  });
 
   // Phát âm thanh Morse
   btnPlayMorse.addEventListener('click', () => {
