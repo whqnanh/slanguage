@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
   }
 
-  function setOutputText(text, defaultText = 'Converted output will appear here...') {
+  function setOutputText(text, defaultText = 'Output will appear here...') {
     if (text && text.trim().length > 0) {
       activeOutput.textContent = text;
       activeOutput.classList.remove('empty');
