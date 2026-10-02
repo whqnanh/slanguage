@@ -417,22 +417,84 @@ class MorseAudioPlayer {
     if (onFinish) onFinish();
   }
 
+  playZip(type = 'zip', duration = 65) {
+    return new Promise((resolve) => {
+      if (!this.isPlaying || !this.ctx) return resolve();
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Quirky high-pitched sound waves
+        osc.type = (type === 'zap') ? 'sawtooth' : (type === 'zop' ? 'triangle' : 'sine');
+
+        if (type === 'zip') {
+          // "zip!" chirp sweep UP
+          const baseFreq = 520 + Math.random() * 240;
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.8, now + (duration / 1000) * 0.85);
+        } else if (type === 'zap') {
+          // "zap!" chirp sweep DOWN
+          const baseFreq = 1350 + Math.random() * 250;
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.32, now + (duration / 1000) * 0.85);
+        } else if (type === 'zop') {
+          // "zop!" wobble blip
+          const baseFreq = 750 + Math.random() * 200;
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.linearRampToValueAtTime(baseFreq * 1.5, now + (duration / 1000) * 0.4);
+          osc.frequency.linearRampToValueAtTime(baseFreq * 0.65, now + (duration / 1000) * 0.9);
+        } else {
+          // "zeep!" high blip
+          const baseFreq = 1100 + Math.random() * 300;
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.6, now + (duration / 1000));
+        }
+
+        // Fast snappy envelope
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.005);
+        gain.gain.setValueAtTime(0.2, now + (duration / 1000) - 0.01);
+        gain.gain.linearRampToValueAtTime(0, now + (duration / 1000));
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + (duration / 1000));
+
+        setTimeout(resolve, duration);
+      } catch (e) {
+        resolve();
+      }
+    });
+  }
+
   async playAlien(alienText, onFinish) {
     this.stop();
     this.unlock();
     this.isPlaying = true;
 
-    // Filter runes ignoring spaces and word separators
-    const runes = Array.from(alienText).filter(c => c !== ' ' && c !== '•' && c !== '\n');
-    // Cosmic Pentatonic scale in Hz
-    const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
+    const runes = Array.from(alienText);
+    const types = ['zip', 'zip', 'zap', 'zip', 'zop', 'zeep'];
 
     for (let i = 0; i < runes.length; i++) {
       if (!this.isPlaying) break;
-      const runeCode = runes[i].codePointAt(0);
-      const freq = scale[runeCode % scale.length];
-      await this.playTone(75, freq);
-      await this.sleep(25);
+      const char = runes[i];
+
+      if (char === '•' || char === ' ') {
+        await this.sleep(120);
+        continue;
+      }
+      if (char === '\n') {
+        await this.sleep(220);
+        continue;
+      }
+
+      const typeIdx = char.codePointAt(0) % types.length;
+      const soundType = types[typeIdx];
+      await this.playZip(soundType, 60);
+      await this.sleep(20);
     }
 
     this.isPlaying = false;
@@ -562,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnPlayMorse.textContent = 'Play Morse';
       } else if (type === 'alien') {
         btnPlayMorse.classList.remove('hidden');
-        btnPlayMorse.textContent = 'Play Chant';
+        btnPlayMorse.textContent = 'Play Zip-Zip';
       } else {
         btnPlayMorse.classList.add('hidden');
         btnStopMorse.classList.add('hidden');
