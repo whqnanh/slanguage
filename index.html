@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>+slanguage - Chuyển đổi mã hóa văn bản</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' font-size='60' font-family='monospace' font-weight='bold' fill='white' text-anchor='middle'>+</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="title-group">
+        <h1 class="main-title">+slanguage</h1>
+        <p class="subtitle">Chuyển đổi tiếng Việt sang Morse, Nhị phân (Binary), Base64, Hex và giải mã tự động.</p>
+      </div>
+      <div class="theme-toggle-wrap">
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Đổi giao diện">Giao diện tối / sáng</button>
+      </div>
+    </header>
+
+    <main class="converter-layout">
+      <!-- Input Panel -->
+      <section class="card input-card">
+        <div class="card-header">
+          <label for="sourceInput" class="section-label">Văn bản đầu vào</label>
+          <div class="actions-group">
+            <button id="btnClear" class="btn btn-sm btn-ghost" type="button">Xóa</button>
+            <button id="btnPaste" class="btn btn-sm btn-ghost" type="button">Dán</button>
+            <button id="btnSample" class="btn btn-sm btn-ghost" type="button">Ví dụ</button>
+          </div>
+        </div>
+        <textarea id="sourceInput" placeholder="Nhập hoặc dán văn bản tiếng Việt tại đây..." rows="6" spellcheck="false"></textarea>
+        
+        <div class="input-options">
+          <div class="option-item">
+            <label for="morseVietnameseMode">Quy tắc mã Morse tiếng Việt:</label>
+            <select id="morseVietnameseMode" class="select-control">
+              <option value="telex">Kiểu Telex viễn thông (Ví dụ: Ơ -> OW, Đ -> DD, Á -> AS)</option>
+              <option value="strip">Bỏ dấu tiếng Việt (Ví dụ: Tiếng Việt -> TIENG VIET)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Grid -->
+      <section class="results-grid">
+        <!-- Morse Code -->
+        <article class="card result-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Mã Morse</h2>
+              <span class="card-desc">Quy chuẩn viễn thông quốc tế &amp; Telex</span>
+            </div>
+            <div class="actions-group">
+              <button id="btnPlayMorse" class="btn btn-sm btn-outline" type="button">Phát âm thanh</button>
+              <button id="btnStopMorse" class="btn btn-sm btn-ghost hidden" type="button">Dừng</button>
+              <button class="btn btn-sm btn-primary copy-btn" data-target="outputMorse" type="button">Sao chép</button>
+            </div>
+          </div>
+          <div class="output-wrapper">
+            <pre id="outputMorse" class="code-box empty" tabindex="0"></pre>
+          </div>
+        </article>
+
+        <!-- Binary (Nhị phân) -->
+        <article class="card result-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Nhị phân (Binary 8-bit)</h2>
+              <span class="card-desc">Mã hóa byte UTF-8 chuẩn</span>
+            </div>
+            <div class="actions-group">
+              <button class="btn btn-sm btn-primary copy-btn" data-target="outputBinary" type="button">Sao chép</button>
+            </div>
+          </div>
+          <div class="output-wrapper">
+            <pre id="outputBinary" class="code-box empty" tabindex="0"></pre>
+          </div>
+        </article>
+
+        <!-- Base64 -->
+        <article class="card result-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Base64</h2>
+              <span class="card-desc">Chuỗi RFC 4648 hỗ trợ tiếng Việt có dấu</span>
+            </div>
+            <div class="actions-group">
+              <button class="btn btn-sm btn-primary copy-btn" data-target="outputBase64" type="button">Sao chép</button>
+            </div>
+          </div>
+          <div class="output-wrapper">
+            <pre id="outputBase64" class="code-box empty" tabindex="0"></pre>
+          </div>
+        </article>
+
+        <!-- Hexadecimal -->
+        <article class="card result-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Thập lục phân (Hex)</h2>
+              <span class="card-desc">Hệ 16 định dạng byte</span>
+            </div>
+            <div class="actions-group">
+              <button class="btn btn-sm btn-primary copy-btn" data-target="outputHex" type="button">Sao chép</button>
+            </div>
+          </div>
+          <div class="output-wrapper">
+            <pre id="outputHex" class="code-box empty" tabindex="0"></pre>
+          </div>
+        </article>
+      </section>
+
+      <!-- Reverse Decoder Section -->
+      <section class="card decoder-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Giải mã ngược lại ra văn bản</h2>
+            <span class="card-desc">Dán mã Morse, Nhị phân hoặc Base64 vào để dịch ngược về tiếng Việt</span>
+          </div>
+        </div>
+
+        <div class="decoder-controls">
+          <div class="detected-badge-wrap">
+            <span class="detected-label">Tự động nhận diện:</span>
+            <span id="detectedTypeBadge" class="detected-badge">Chờ dữ liệu...</span>
+          </div>
+        </div>
+
+        <div class="decoder-split">
+          <div class="decoder-input-col">
+            <label for="decodeInput" class="section-label">Mã cần giải</label>
+            <textarea id="decodeInput" placeholder="Dán mã cần giải vào đây (ví dụ: ... --- ... hoặc 01000001)..." rows="4" spellcheck="false"></textarea>
+          </div>
+          <div class="decoder-output-col">
+            <div class="card-header small-header">
+              <label for="decodeOutput" class="section-label">Kết quả dịch</label>
+              <button class="btn btn-sm btn-primary copy-btn" data-target="decodeOutput" type="button">Sao chép</button>
+            </div>
+            <textarea id="decodeOutput" readonly rows="4" placeholder="Kết quả sẽ hiển thị tại đây..."></textarea>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Được tối ưu cho tiếng Việt đầy đủ dấu (Unicode / UTF-8)</span>
+      <span class="dot-separator">•</span>
+      <span>Xử lý trực tiếp trên trình duyệt, không gửi dữ liệu ra ngoài</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
