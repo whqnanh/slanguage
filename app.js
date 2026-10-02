@@ -39,7 +39,6 @@ const VIETNAMESE_TELEX_MAP = {
   'ỳ': 'yf', 'ý': 'ys', 'ỷ': 'yr', 'ỹ': 'yx', 'ỵ': 'yj'
 };
 
-// Chuyển ký tự tiếng Việt sang Telex
 function vietnameseToTelex(text) {
   let result = '';
   for (const char of text) {
@@ -54,7 +53,6 @@ function vietnameseToTelex(text) {
   return result;
 }
 
-// Bỏ dấu tiếng Việt (strip diacritics)
 function stripVietnameseAccents(text) {
   return text
     .normalize('NFD')
@@ -63,11 +61,9 @@ function stripVietnameseAccents(text) {
     .replace(/Đ/g, 'D');
 }
 
-// Chuyển chữ thành mã Morse
 function textToMorse(text, mode = 'telex') {
-  if (!text.trim()) return '';
-  
-  let processed = (mode === 'strip') 
+  if (!text || !text.trim()) return '';
+  const processed = (mode === 'strip') 
     ? stripVietnameseAccents(text)
     : vietnameseToTelex(text);
   
@@ -80,9 +76,8 @@ function textToMorse(text, mode = 'telex') {
   }).join(' / ');
 }
 
-// Dịch Morse ngược về chữ
 function morseToText(morse) {
-  if (!morse.trim()) return '';
+  if (!morse || !morse.trim()) return '';
   const words = morse.trim().split(/\s*\/\s*|\s{3,}/);
   return words.map(word => {
     const letters = word.trim().split(/\s+/);
@@ -90,7 +85,6 @@ function morseToText(morse) {
   }).join(' ');
 }
 
-// Chuyển chữ sang chuỗi nhị phân (Binary UTF-8 bytes)
 function textToBinary(text) {
   if (!text) return '';
   const encoder = new TextEncoder();
@@ -100,16 +94,14 @@ function textToBinary(text) {
     .join(' ');
 }
 
-// Dịch chuỗi nhị phân về chữ
 function binaryToText(binaryStr) {
   const clean = binaryStr.trim().replace(/[^01]/g, '');
   if (!clean || clean.length % 8 !== 0) {
     if (clean.length > 0 && clean.length % 8 !== 0) {
-      throw new Error('Số lượng bit không hợp lệ (phải là bội số của 8)');
+      throw new Error('Số lượng bit phải là bội số của 8');
     }
     return '';
   }
-  
   const bytes = [];
   for (let i = 0; i < clean.length; i += 8) {
     bytes.push(parseInt(clean.slice(i, i + 8), 2));
@@ -117,7 +109,6 @@ function binaryToText(binaryStr) {
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
-// Base64 UTF-8 an toàn cho tiếng Việt
 function textToBase64(text) {
   if (!text) return '';
   const bytes = new TextEncoder().encode(text);
@@ -133,7 +124,6 @@ function base64ToText(b64) {
   return new TextDecoder().decode(bytes);
 }
 
-// Chuyển sang Hexadecimal (Thập lục phân)
 function textToHex(text) {
   if (!text) return '';
   const bytes = new TextEncoder().encode(text);
@@ -146,7 +136,7 @@ function hexToText(hexStr) {
   const clean = hexStr.trim().replace(/[^0-9a-fA-F]/g, '');
   if (!clean || clean.length % 2 !== 0) {
     if (clean.length > 0 && clean.length % 2 !== 0) {
-      throw new Error('Số lượng ký tự Hex không hợp lệ (phải là cặp 2 ký tự)');
+      throw new Error('Ký tự Hex phải là các cặp 2 ký tự');
     }
     return '';
   }
@@ -157,7 +147,6 @@ function hexToText(hexStr) {
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
-// Chuyển ngược Telex về tiếng Việt
 function telexToVietnamese(text) {
   const sortedPairs = Object.entries(VIETNAMESE_TELEX_MAP).sort((a, b) => b[1].length - a[1].length);
   let res = text.toLowerCase();
@@ -167,14 +156,13 @@ function telexToVietnamese(text) {
   return res.toUpperCase();
 }
 
-// Tự động nhận diện định dạng mã và giải mã
 function autoDetectAndDecode(rawInput) {
   const input = rawInput.trim();
   if (!input) {
     return { typeName: 'Chờ dữ liệu...', result: '' };
   }
 
-  // 1. Mã Morse: Chỉ chứa ký tự '.', '-', '/', khoảng trắng và có ít nhất 1 dấu chấm hoặc gạch nối
+  // 1. Mã Morse
   if (/^[.\-\s/_]+$/.test(input) && /[.\-]/.test(input)) {
     try {
       const decodedMorse = morseToText(input);
@@ -188,7 +176,7 @@ function autoDetectAndDecode(rawInput) {
     }
   }
 
-  // 2. Nhị phân (Binary): Chuỗi chỉ chứa 0 và 1 (kèm khoảng trắng)
+  // 2. Nhị phân (Binary)
   const binaryClean = input.replace(/\s+/g, '');
   if (/^[01]+$/.test(binaryClean) && binaryClean.length >= 8) {
     try {
@@ -199,7 +187,7 @@ function autoDetectAndDecode(rawInput) {
     }
   }
 
-  // 3. Hex (Thập lục phân): Các cặp byte cách nhau bằng khoảng trắng hoặc chuỗi hex chẵn
+  // 3. Hex (Thập lục phân)
   const cleanHex = input.replace(/\s+/g, '');
   const isHexOnly = /^[0-9a-fA-F]+$/.test(cleanHex);
   const hasHexSpacing = /^([0-9a-fA-F]{2}[\s]+)+[0-9a-fA-F]{2}$/.test(input);
@@ -224,7 +212,7 @@ function autoDetectAndDecode(rawInput) {
     } catch (e) {}
   }
 
-  // 5. Thử fallback Base64 / Hex
+  // 5. Fallback
   try {
     const decodedB64 = base64ToText(cleanB64);
     if (decodedB64 && !/[\uFFFD]/.test(decodedB64)) {
@@ -241,15 +229,14 @@ function autoDetectAndDecode(rawInput) {
     } catch (e) {}
   }
 
-  return { typeName: 'Chưa xác định', result: 'Chưa nhận diện được định dạng mã. Vui lòng kiểm tra lại nội dung.' };
+  return { typeName: 'Chưa xác định', result: 'Chưa nhận diện được định dạng mã. Vui lòng kiểm tra lại.' };
 }
 
-// Trình phát âm thanh mã Morse qua Web Audio API
+// Trình phát âm thanh mã Morse
 class MorseAudioPlayer {
   constructor() {
     this.ctx = null;
     this.isPlaying = false;
-    this.abortController = null;
     this.dotDuration = 60; // ms
     this.frequency = 650;  // Hz
   }
@@ -324,7 +311,7 @@ class MorseAudioPlayer {
   }
 }
 
-// Khởi tạo các phần tử giao diện
+// Khởi tạo giao diện
 document.addEventListener('DOMContentLoaded', () => {
   const sourceInput = document.getElementById('sourceInput');
   const morseVietnameseMode = document.getElementById('morseVietnameseMode');
@@ -332,32 +319,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnPaste = document.getElementById('btnPaste');
   const btnSample = document.getElementById('btnSample');
 
-  const outputMorse = document.getElementById('outputMorse');
-  const outputBinary = document.getElementById('outputBinary');
-  const outputBase64 = document.getElementById('outputBase64');
-  const outputHex = document.getElementById('outputHex');
-
+  const activeOutput = document.getElementById('activeOutput');
+  const outputFormatDesc = document.getElementById('outputFormatDesc');
+  const btnCopyActive = document.getElementById('btnCopyActive');
   const btnPlayMorse = document.getElementById('btnPlayMorse');
   const btnStopMorse = document.getElementById('btnStopMorse');
-  const toast = document.getElementById('toast');
-  const themeToggle = document.getElementById('themeToggle');
+  const tabButtons = document.querySelectorAll('.tab-btn');
 
   const decodeInput = document.getElementById('decodeInput');
   const decodeOutput = document.getElementById('decodeOutput');
   const detectedTypeBadge = document.getElementById('detectedTypeBadge');
-  const btnPiP = document.getElementById('btnPiP');
-  const pipCanvas = document.getElementById('pipCanvas');
-  const pipVideo = document.getElementById('pipVideo');
+  const btnDecodePaste = document.getElementById('btnDecodePaste');
+  const btnDecodeClear = document.getElementById('btnDecodeClear');
+  const btnDecodeCopy = document.getElementById('btnDecodeCopy');
 
-  const floatingMiniWidget = document.getElementById('floatingMiniWidget');
-  const floatingInput = document.getElementById('floatingInput');
-  const floatingMorse = document.getElementById('floatingMorse');
-  const floatingBinary = document.getElementById('floatingBinary');
-  const floatingBase64 = document.getElementById('floatingBase64');
-  const btnFloatingClose = document.getElementById('btnFloatingClose');
-  const btnFloatingPaste = document.getElementById('btnFloatingPaste');
+  const toast = document.getElementById('toast');
+  const themeToggle = document.getElementById('themeToggle');
 
   const player = new MorseAudioPlayer();
+
+  // Định dạng hiện tại được chọn ('morse' | 'binary' | 'base64' | 'hex')
+  let currentFormat = 'morse';
+
+  const FORMAT_DESCS = {
+    morse: 'Quy chuẩn viễn thông quốc tế & Telex',
+    binary: 'Mã hóa byte UTF-8 chuẩn 8-bit',
+    base64: 'Chuỗi RFC 4648 hỗ trợ tiếng Việt có dấu',
+    hex: 'Hệ 16 định dạng byte UTF-8'
+  };
 
   function showToast(message) {
     toast.textContent = message;
@@ -368,206 +357,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
   }
 
-  function setOutput(el, text, defaultText = 'Chưa có nội dung...') {
+  function setOutputText(text, defaultText = 'Chưa có nội dung...') {
     if (text && text.trim().length > 0) {
-      el.textContent = text;
-      el.classList.remove('empty');
+      activeOutput.textContent = text;
+      activeOutput.classList.remove('empty');
     } else {
-      el.textContent = defaultText;
-      el.classList.add('empty');
+      activeOutput.textContent = defaultText;
+      activeOutput.classList.add('empty');
     }
   }
 
-  function drawPipCanvas() {
-    if (!pipCanvas) return;
-    const ctx = pipCanvas.getContext('2d');
-    const w = pipCanvas.width;
-    const h = pipCanvas.height;
-
-    // Dark sleek background
-    ctx.fillStyle = '#0b0f17';
-    ctx.fillRect(0, 0, w, h);
-
-    // Border
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, w - 2, h - 2);
-
-    // Title
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 20px "JetBrains Mono", monospace, sans-serif';
-    ctx.fillText('+slanguage', 24, 38);
-
-    ctx.fillStyle = '#64748b';
-    ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText('Cửa sổ nổi theo dõi mã hóa', 180, 36);
-
-    // Separator line
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(24, 52);
-    ctx.lineTo(w - 24, 52);
-    ctx.stroke();
-
-    const text = (sourceInput ? sourceInput.value.trim() : '') || '(Chưa có nội dung)';
-    const morse = (outputMorse && !outputMorse.classList.contains('empty') ? outputMorse.textContent.trim() : '---');
-    const binary = (outputBinary && !outputBinary.classList.contains('empty') ? outputBinary.textContent.trim() : '---');
-    const b64 = (outputBase64 && !outputBase64.classList.contains('empty') ? outputBase64.textContent.trim() : '---');
-    const decoded = (decodeOutput ? decodeOutput.value.trim() : '');
-
-    let y = 88;
-    function drawLine(label, val, color, font) {
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(label, 24, y);
-
-      ctx.fillStyle = color;
-      ctx.font = font;
-      const display = val.length > 55 ? val.slice(0, 52) + '...' : val;
-      ctx.fillText(display, 24, y + 22);
-      y += 54;
-    }
-
-    drawLine('VĂN BẢN:', text, '#f8fafc', 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif');
-    drawLine('MORSE:', morse, '#38bdf8', '14px "JetBrains Mono", monospace');
-    drawLine('NHỊ PHÂN:', binary, '#c084fc', '13px "JetBrains Mono", monospace');
-    drawLine('BASE64:', b64, '#34d399', '14px "JetBrains Mono", monospace');
-
-    if (decoded) {
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 12px -apple-system, sans-serif';
-      const decDisplay = decoded.length > 46 ? decoded.slice(0, 43) + '...' : decoded;
-      ctx.fillText('GIẢI MÃ: ' + decDisplay, 24, h - 14);
-    }
-  }
-
-  function updateFloatingWidget(text) {
-    if (!floatingMorse) return;
-    const mode = morseVietnameseMode ? morseVietnameseMode.value : 'telex';
-    if (!text || !text.trim()) {
-      floatingMorse.textContent = '---';
-      floatingBinary.textContent = '---';
-      floatingBase64.textContent = '---';
-      return;
-    }
-    try {
-      floatingMorse.textContent = textToMorse(text, mode);
-      floatingBinary.textContent = textToBinary(text);
-      floatingBase64.textContent = textToBase64(text);
-    } catch (e) {}
-  }
-
-  let pipStream = null;
-  async function togglePictureInPicture() {
-    drawPipCanvas();
-
-    // 1. Luôn kích hoạt thanh công cụ nổi Mini (Floating Widget) phù hợp 100% cho iPhone & Mobile
-    if (floatingMiniWidget) {
-      const isHidden = floatingMiniWidget.classList.contains('hidden');
-      floatingMiniWidget.classList.toggle('hidden');
-      if (isHidden) {
-        floatingInput.value = sourceInput.value;
-        updateFloatingWidget(sourceInput.value);
-        showToast('Đã mở cửa sổ nổi Mini');
-        setTimeout(() => {
-          if (floatingInput) floatingInput.focus();
-        }, 150);
-      }
-    }
-
-    // 2. Nếu trình duyệt hỗ trợ Document Picture-in-Picture chuẩn W3C (Chrome/Edge/Desktop)
-    if ('documentPictureInPicture' in window) {
-      try {
-        if (!window.documentPictureInPicture.window) {
-          const pipWin = await window.documentPictureInPicture.requestWindow({
-            width: 360,
-            height: 420
-          });
-          document.querySelectorAll('link[rel="stylesheet"], style').forEach(el => {
-            pipWin.document.head.appendChild(el.cloneNode(true));
-          });
-          pipWin.document.body.innerHTML = `
-            <div style="padding: 1rem; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #f8fafc; min-height: 100vh; box-sizing: border-box;">
-              <h4 style="margin-bottom: 0.5rem; font-family: monospace; color: #38bdf8;">+slanguage PiP</h4>
-              <input id="pInput" style="width: 100%; box-sizing: border-box; padding: 0.5rem; margin-bottom: 0.75rem; border-radius: 4px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 14px;" placeholder="Gõ văn bản..." value="${sourceInput.value}">
-              <div style="font-size: 13px; margin-bottom: 0.4rem; color: #38bdf8;"><strong>Morse:</strong> <span id="pMorse">---</span></div>
-              <div style="font-size: 13px; margin-bottom: 0.4rem; color: #c084fc;"><strong>Nhị phân:</strong> <span id="pBin">---</span></div>
-              <div style="font-size: 13px; color: #34d399;"><strong>Base64:</strong> <span id="pB64">---</span></div>
-            </div>
-          `;
-          const pInput = pipWin.document.getElementById('pInput');
-          const pMorse = pipWin.document.getElementById('pMorse');
-          const pBin = pipWin.document.getElementById('pBin');
-          const pB64 = pipWin.document.getElementById('pB64');
-          function updatePipWin(val) {
-            pMorse.textContent = textToMorse(val, 'telex') || '---';
-            pBin.textContent = textToBinary(val) || '---';
-            pB64.textContent = textToBase64(val) || '---';
-          }
-          updatePipWin(sourceInput.value);
-          pInput.addEventListener('input', (e) => {
-            sourceInput.value = e.target.value;
-            updateEncodings();
-            updatePipWin(e.target.value);
-          });
-          return;
-        }
-      } catch (err) {}
-    }
-
-    // 3. Với video canvas PiP
-    if (pipVideo && pipCanvas) {
-      if (document.pictureInPictureElement) {
-        try { await document.exitPictureInPicture(); } catch (e) {}
-        return;
-      }
-      if (pipVideo.webkitPresentationMode === 'picture-in-picture') {
-        try { pipVideo.webkitSetPresentationMode('inline'); } catch (e) {}
-        return;
-      }
-      try {
-        if (!pipStream) {
-          if (pipCanvas.captureStream) pipStream = pipCanvas.captureStream(15);
-        }
-        if (pipStream) {
-          pipVideo.srcObject = pipStream;
-          await pipVideo.play();
-          if (pipVideo.requestPictureInPicture) {
-            await pipVideo.requestPictureInPicture();
-          } else if (pipVideo.webkitSetPresentationMode) {
-            pipVideo.webkitSetPresentationMode('picture-in-picture');
-          }
-        }
-      } catch (err) {}
-    }
-  }
-
-  function updateEncodings() {
+  function updateActiveOutput() {
     const text = sourceInput.value;
     const mode = morseVietnameseMode.value;
 
-    if (!text) {
-      setOutput(outputMorse, '');
-      setOutput(outputBinary, '');
-      setOutput(outputBase64, '');
-      setOutput(outputHex, '');
-      drawPipCanvas();
+    if (!text || !text.trim()) {
+      setOutputText('');
       return;
     }
 
     try {
-      setOutput(outputMorse, textToMorse(text, mode));
-      setOutput(outputBinary, textToBinary(text));
-      setOutput(outputBase64, textToBase64(text));
-      setOutput(outputHex, textToHex(text));
-      drawPipCanvas();
+      let result = '';
+      if (currentFormat === 'morse') {
+        result = textToMorse(text, mode);
+      } else if (currentFormat === 'binary') {
+        result = textToBinary(text);
+      } else if (currentFormat === 'base64') {
+        result = textToBase64(text);
+      } else if (currentFormat === 'hex') {
+        result = textToHex(text);
+      }
+      setOutputText(result);
     } catch (err) {
       console.error('Lỗi khi mã hóa:', err);
     }
   }
 
-  function handleDecoderInput() {
+  // Chuyển tab định dạng (thu gọn kiểu mới hiện)
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.getAttribute('data-type');
+      currentFormat = type;
+
+      tabButtons.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+
+      if (outputFormatDesc) {
+        outputFormatDesc.textContent = FORMAT_DESCS[type] || '';
+      }
+
+      // Hiện nút phát âm thanh khi ở tab morse
+      if (type === 'morse') {
+        btnPlayMorse.classList.remove('hidden');
+      } else {
+        btnPlayMorse.classList.add('hidden');
+        btnStopMorse.classList.add('hidden');
+        player.stop();
+      }
+
+      updateActiveOutput();
+    });
+  });
+
+  // Sao chép kết quả chuyển đổi hiện tại
+  btnCopyActive.addEventListener('click', async () => {
+    const content = activeOutput.textContent;
+    if (!content || activeOutput.classList.contains('empty')) {
+      showToast('Không có nội dung để sao chép');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(content);
+      showToast('Đã sao chép kết quả');
+    } catch {
+      showToast('Lỗi khi sao chép');
+    }
+  });
+
+  // Giải mã ngược
+  function runDecoder() {
     const input = decodeInput.value;
     const { typeName, result } = autoDetectAndDecode(input);
     detectedTypeBadge.textContent = typeName;
@@ -577,60 +449,49 @@ document.addEventListener('DOMContentLoaded', () => {
       detectedTypeBadge.classList.remove('active');
     }
     decodeOutput.value = result;
-    drawPipCanvas();
   }
 
-  // Lắng nghe sự kiện gõ phím
-  sourceInput.addEventListener('input', () => {
-    updateEncodings();
-    if (floatingInput && document.activeElement !== floatingInput) {
-      floatingInput.value = sourceInput.value;
-      updateFloatingWidget(sourceInput.value);
+  // Nút Dán và Xóa cho phần dịch (giải mã)
+  btnDecodePaste.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      decodeInput.value = text;
+      runDecoder();
+      showToast('Đã dán mã cần giải');
+    } catch {
+      showToast('Không đọc được bộ nhớ tạm. Hãy dùng Ctrl+V hoặc chạm giữ để dán.');
     }
   });
-  morseVietnameseMode.addEventListener('change', () => {
-    updateEncodings();
-    updateFloatingWidget(sourceInput.value);
+
+  btnDecodeClear.addEventListener('click', () => {
+    decodeInput.value = '';
+    runDecoder();
+    decodeInput.focus();
   });
-  decodeInput.addEventListener('input', handleDecoderInput);
 
-  if (btnPiP) {
-    btnPiP.addEventListener('click', togglePictureInPicture);
-  }
+  btnDecodeCopy.addEventListener('click', async () => {
+    const content = decodeOutput.value;
+    if (!content || !content.trim()) {
+      showToast('Không có kết quả để sao chép');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(content);
+      showToast('Đã sao chép kết quả dịch');
+    } catch {
+      showToast('Lỗi khi sao chép');
+    }
+  });
 
-  if (floatingInput) {
-    floatingInput.addEventListener('input', (e) => {
-      sourceInput.value = e.target.value;
-      updateEncodings();
-      updateFloatingWidget(e.target.value);
-    });
-  }
+  // Lắng nghe sự kiện
+  sourceInput.addEventListener('input', updateActiveOutput);
+  morseVietnameseMode.addEventListener('change', updateActiveOutput);
+  decodeInput.addEventListener('input', runDecoder);
 
-  if (btnFloatingPaste) {
-    btnFloatingPaste.addEventListener('click', async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        floatingInput.value = text;
-        sourceInput.value = text;
-        updateEncodings();
-        updateFloatingWidget(text);
-        showToast('Đã dán và chuyển đổi');
-      } catch {
-        showToast('Không đọc được bộ nhớ tạm. Hãy chạm vào ô để dán.');
-      }
-    });
-  }
-
-  if (btnFloatingClose) {
-    btnFloatingClose.addEventListener('click', () => {
-      if (floatingMiniWidget) floatingMiniWidget.classList.add('hidden');
-    });
-  }
-
-  // Nút tiện ích
+  // Nút bảng nhập nguồn
   btnClear.addEventListener('click', () => {
     sourceInput.value = '';
-    updateEncodings();
+    updateActiveOutput();
     player.stop();
     btnPlayMorse.classList.remove('hidden');
     btnStopMorse.classList.add('hidden');
@@ -641,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const text = await navigator.clipboard.readText();
       sourceInput.value = text;
-      updateEncodings();
+      updateActiveOutput();
       showToast('Đã dán nội dung từ bộ nhớ tạm');
     } catch {
       showToast('Không thể truy cập bộ nhớ tạm. Hãy dùng Ctrl+V.');
@@ -650,35 +511,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnSample.addEventListener('click', () => {
     sourceInput.value = 'Xin chào Việt Nam! Chúc một ngày tốt lành.';
-    updateEncodings();
-  });
-
-  // Sao chép
-  document.querySelectorAll('.copy-btn').forEach(button => {
-    button.addEventListener('click', async () => {
-      const targetId = button.getAttribute('data-target');
-      const targetEl = document.getElementById(targetId);
-      if (!targetEl) return;
-
-      const content = targetEl.value !== undefined ? targetEl.value : targetEl.textContent;
-      if (!content || targetEl.classList.contains('empty')) {
-        showToast('Không có nội dung để sao chép');
-        return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(content);
-        showToast('Đã sao chép vào bộ nhớ tạm');
-      } catch {
-        showToast('Lỗi khi sao chép');
-      }
-    });
+    updateActiveOutput();
   });
 
   // Phát âm thanh Morse
   btnPlayMorse.addEventListener('click', () => {
-    const code = outputMorse.textContent;
-    if (!code || outputMorse.classList.contains('empty')) {
+    const code = textToMorse(sourceInput.value, morseVietnameseMode.value);
+    if (!code || !code.trim()) {
       showToast('Chưa có mã Morse để phát');
       return;
     }
@@ -716,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('theme', newTheme);
   });
 
-  // Điền dữ liệu mẫu khởi tạo để người dùng thấy ngay
+  // Dữ liệu mẫu khởi tạo
   sourceInput.value = 'Xin chào Việt Nam!';
-  updateEncodings();
+  updateActiveOutput();
 });

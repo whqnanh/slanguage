@@ -22,7 +22,6 @@
         <p class="subtitle">Chuyển đổi tiếng Việt sang Morse, Nhị phân, Base64, Hex và tự động dịch ngược.</p>
       </div>
       <div class="header-actions">
-        <button id="btnPiP" class="btn btn-outline" type="button" title="Mở cửa sổ nổi trên màn hình iPhone / máy tính">Cửa sổ nổi (PiP)</button>
         <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Đổi giao diện">Sáng / Tối</button>
       </div>
     </header>
@@ -38,7 +37,7 @@
             <button id="btnSample" class="btn btn-sm btn-ghost" type="button">Ví dụ</button>
           </div>
         </div>
-        <textarea id="sourceInput" placeholder="Nhập hoặc dán văn bản tiếng Việt tại đây..." rows="6" spellcheck="false"></textarea>
+        <textarea id="sourceInput" placeholder="Nhập hoặc dán văn bản tiếng Việt tại đây..." rows="5" spellcheck="false"></textarea>
         
         <div class="input-options">
           <div class="option-item">
@@ -51,102 +50,58 @@
         </div>
       </section>
 
-      <!-- Results Grid -->
-      <section class="results-grid">
-        <!-- Morse Code -->
-        <article class="card result-card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Mã Morse</h2>
-              <span class="card-desc">Quy chuẩn viễn thông quốc tế &amp; Telex</span>
-            </div>
-            <div class="actions-group">
-              <button id="btnPlayMorse" class="btn btn-sm btn-outline" type="button">Phát âm thanh</button>
-              <button id="btnStopMorse" class="btn btn-sm btn-ghost hidden" type="button">Dừng</button>
-              <button class="btn btn-sm btn-primary copy-btn" data-target="outputMorse" type="button">Sao chép</button>
-            </div>
+      <!-- Compact Output Panel (Chọn kiểu mới hiện) -->
+      <section class="card output-card">
+        <div class="card-header">
+          <div>
+            <label class="section-label">Kết quả chuyển đổi</label>
+            <span id="outputFormatDesc" class="card-desc">Quy chuẩn viễn thông quốc tế &amp; Telex</span>
           </div>
-          <div class="output-wrapper">
-            <pre id="outputMorse" class="code-box empty" tabindex="0"></pre>
+          <div class="actions-group">
+            <button id="btnPlayMorse" class="btn btn-sm btn-outline" type="button">Phát âm</button>
+            <button id="btnStopMorse" class="btn btn-sm btn-ghost hidden" type="button">Dừng</button>
+            <button id="btnCopyActive" class="btn btn-sm btn-primary" type="button">Sao chép</button>
           </div>
-        </article>
+        </div>
 
-        <!-- Binary (Nhị phân) -->
-        <article class="card result-card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Nhị phân (Binary 8-bit)</h2>
-              <span class="card-desc">Mã hóa byte UTF-8 chuẩn</span>
-            </div>
-            <div class="actions-group">
-              <button class="btn btn-sm btn-primary copy-btn" data-target="outputBinary" type="button">Sao chép</button>
-            </div>
-          </div>
-          <div class="output-wrapper">
-            <pre id="outputBinary" class="code-box empty" tabindex="0"></pre>
-          </div>
-        </article>
+        <!-- Format Selector Tabs -->
+        <div class="format-tabs" role="tablist">
+          <button class="tab-btn active" data-type="morse" type="button" role="tab" aria-selected="true">Mã Morse</button>
+          <button class="tab-btn" data-type="binary" type="button" role="tab" aria-selected="false">Nhị phân</button>
+          <button class="tab-btn" data-type="base64" type="button" role="tab" aria-selected="false">Base64</button>
+          <button class="tab-btn" data-type="hex" type="button" role="tab" aria-selected="false">Hex</button>
+        </div>
 
-        <!-- Base64 -->
-        <article class="card result-card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Base64</h2>
-              <span class="card-desc">Chuỗi RFC 4648 hỗ trợ tiếng Việt có dấu</span>
-            </div>
-            <div class="actions-group">
-              <button class="btn btn-sm btn-primary copy-btn" data-target="outputBase64" type="button">Sao chép</button>
-            </div>
-          </div>
-          <div class="output-wrapper">
-            <pre id="outputBase64" class="code-box empty" tabindex="0"></pre>
-          </div>
-        </article>
-
-        <!-- Hexadecimal -->
-        <article class="card result-card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Thập lục phân (Hex)</h2>
-              <span class="card-desc">Hệ 16 định dạng byte</span>
-            </div>
-            <div class="actions-group">
-              <button class="btn btn-sm btn-primary copy-btn" data-target="outputHex" type="button">Sao chép</button>
-            </div>
-          </div>
-          <div class="output-wrapper">
-            <pre id="outputHex" class="code-box empty" tabindex="0"></pre>
-          </div>
-        </article>
+        <div class="output-wrapper">
+          <pre id="activeOutput" class="code-box empty" tabindex="0"></pre>
+        </div>
       </section>
 
-      <!-- Reverse Decoder Section -->
+      <!-- Reverse Decoder Section (Có nút Dán và Xóa) -->
       <section class="card decoder-card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">Giải mã ngược lại ra văn bản</h2>
-            <span class="card-desc">Dán mã Morse, Nhị phân hoặc Base64 vào để dịch ngược về tiếng Việt</span>
-          </div>
-        </div>
-
-        <div class="decoder-controls">
-          <div class="detected-badge-wrap">
-            <span class="detected-label">Tự động nhận diện:</span>
-            <span id="detectedTypeBadge" class="detected-badge">Chờ dữ liệu...</span>
-          </div>
-        </div>
-
-        <div class="decoder-split">
-          <div class="decoder-input-col">
-            <label for="decodeInput" class="section-label">Mã cần giải</label>
-            <textarea id="decodeInput" placeholder="Dán mã cần giải vào đây (ví dụ: ... --- ... hoặc 01000001)..." rows="4" spellcheck="false"></textarea>
-          </div>
-          <div class="decoder-output-col">
-            <div class="card-header small-header">
-              <label for="decodeOutput" class="section-label">Kết quả dịch</label>
-              <button class="btn btn-sm btn-primary copy-btn" data-target="decodeOutput" type="button">Sao chép</button>
+            <h2 class="card-title">Dịch ngược ra văn bản</h2>
+            <div class="detected-badge-wrap">
+              <span class="detected-label">Nhận diện:</span>
+              <span id="detectedTypeBadge" class="detected-badge">Chờ dữ liệu...</span>
             </div>
-            <textarea id="decodeOutput" readonly rows="4" placeholder="Kết quả sẽ hiển thị tại đây..."></textarea>
+          </div>
+          <div class="actions-group">
+            <button id="btnDecodePaste" class="btn btn-sm btn-ghost" type="button">Dán</button>
+            <button id="btnDecodeClear" class="btn btn-sm btn-ghost" type="button">Xóa</button>
+            <button id="btnDecodeCopy" class="btn btn-sm btn-primary" type="button">Sao chép</button>
+          </div>
+        </div>
+
+        <div class="decoder-fields">
+          <div class="field-group">
+            <label for="decodeInput" class="field-label">Mã cần dịch:</label>
+            <textarea id="decodeInput" placeholder="Dán mã Morse (... --- ...), Nhị phân, Base64 hoặc Hex vào đây..." rows="3" spellcheck="false"></textarea>
+          </div>
+          <div class="field-group">
+            <label for="decodeOutput" class="field-label">Kết quả dịch:</label>
+            <textarea id="decodeOutput" readonly rows="3" placeholder="Kết quả tự động dịch sẽ hiện ở đây..."></textarea>
           </div>
         </div>
       </section>
@@ -159,40 +114,7 @@
     </footer>
   </div>
 
-  <!-- Cửa sổ nổi Mini (Widget) cho điện thoại iPhone và Desktop -->
-  <aside id="floatingMiniWidget" class="floating-widget hidden" aria-label="Cửa sổ nổi mini">
-    <div class="floating-header">
-      <span class="floating-brand">+slanguage Mini</span>
-      <div class="floating-controls">
-        <button id="btnFloatingPaste" class="btn btn-xs btn-primary" type="button">Dán nhanh</button>
-        <button id="btnFloatingClose" class="btn btn-xs btn-ghost" type="button" aria-label="Đóng">✕</button>
-      </div>
-    </div>
-    <div class="floating-body">
-      <input type="text" id="floatingInput" placeholder="Dán hoặc gõ văn bản..." spellcheck="false">
-      <div class="floating-output-row">
-        <span class="floating-tag">Morse</span>
-        <span id="floatingMorse" class="floating-val">---</span>
-        <button class="btn btn-xs btn-outline copy-btn" data-target="floatingMorse" type="button">Chép</button>
-      </div>
-      <div class="floating-output-row">
-        <span class="floating-tag">Nhị phân</span>
-        <span id="floatingBinary" class="floating-val">---</span>
-        <button class="btn btn-xs btn-outline copy-btn" data-target="floatingBinary" type="button">Chép</button>
-      </div>
-      <div class="floating-output-row">
-        <span class="floating-tag">Base64</span>
-        <span id="floatingBase64" class="floating-val">---</span>
-        <button class="btn btn-xs btn-outline copy-btn" data-target="floatingBase64" type="button">Chép</button>
-      </div>
-    </div>
-  </aside>
-
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-
-  <!-- Elements hỗ trợ Picture-in-Picture trên iPhone / Web -->
-  <canvas id="pipCanvas" width="640" height="360" class="hidden-media"></canvas>
-  <video id="pipVideo" playsinline muted autoplay class="hidden-media"></video>
 
   <script src="app.js"></script>
 </body>
