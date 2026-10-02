@@ -294,21 +294,29 @@ textarea:focus, select:focus {
 /* Format Tabs Selector (Thu gọn kiểu mới hiện) */
 .format-tabs {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.25rem;
   background: var(--bg-code);
   padding: 0.25rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   margin-bottom: 0.75rem;
   width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.format-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: fit-content;
   font-family: inherit;
-  font-size: 0.825rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  padding: 0.45rem 0.4rem;
+  padding: 0.45rem 0.35rem;
   background: transparent;
   border: none;
   color: var(--text-muted);

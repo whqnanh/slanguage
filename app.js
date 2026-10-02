@@ -147,6 +147,98 @@ function hexToText(hexStr) {
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
+// ==========================================
+// Custom Alien Enchantment Table Cipher
+// (Invented Non-Standard Astral Translation)
+// ==========================================
+const ALIEN_CHAR_MAP = {
+  // Latin Alphabet (Original cosmic mapping)
+  'A': '⍜',  'B': 'ᒲ',  'C': '⌰',  'D': '⊐',
+  'E': 'ᓭ',  'F': '⍙',  'G': '⨅',  'H': '⍑',
+  'I': '⋮',  'J': 'ᔦ',  'K': '⌖',  'L': '⊏',
+  'M': '⍝',  'N': '⟍',  'O': 'ᗝ',  'P': 'ᖱ',
+  'Q': '⎓',  'R': '∷',  'S': 'ᓵ',  'T': 'ℸ',
+  'U': '⚍',  'V': '⍊',  'W': '∴',  'X': 'ꖌ',
+  'Y': 'ꖎ',  'Z': 'ʖ',
+
+  // Ancient Galactic Numerals (0-9)
+  '0': '⍿',  '1': 'ᔑ',  '2': 'ᒷ',  '3': 'ᑑ',  '4': '⊣',
+  '5': 'ᔓ',  '6': 'ᔥ',  '7': 'ꖌ',  '8': '⌏',  '9': '⌑',
+
+  // Mystical Celestial Punctuation
+  '.': '✦',  ',': '፥',  '!': '᠅',  '?': '⍰',
+  ':': '⁝',  ';': '፤',  '-': '╌',  '_': '‗',
+  '+': '⍭',  '=': '⩵',  '/': '⟋',  '(': '⦕',
+  ')': '⦖',  '[': '⟦',  ']': '⟧'
+};
+
+// Vietnamese Astral Tone & Diacritic Harmonization
+const ALIEN_VIETNAMESE_VOWELS = {
+  'à': '⍜ᐠ', 'á': '⍜ᐟ', 'ả': '⍜ᐝ', 'ã': '⍜ᐞ', 'ạ': '⍜⬝',
+  'ă': '⍜˘', 'ằ': '⍜˘ᐠ', 'ắ': '⍜˘ᐟ', 'ẳ': '⍜˘ᐝ', 'ẵ': '⍜˘ᐞ', 'ặ': '⍜˘⬝',
+  'â': '⍜ˆ', 'ầ': '⍜ˆᐠ', 'ấ': '⍜ˆᐟ', 'ẩ': '⍜ˆᐝ', 'ẫ': '⍜ˆᐞ', 'ậ': '⍜ˆ⬝',
+  'đ': '⊐ᐟ',
+  'è': 'ᓭᐠ', 'é': 'ᓭᐟ', 'ẻ': 'ᓭᐝ', 'ẽ': 'ᓭᐞ', 'ẹ': 'ᓭ⬝',
+  'ê': 'ᓭˆ', 'ề': 'ᓭˆᐠ', 'ế': 'ᓭˆᐟ', 'ể': 'ᓭˆᐝ', 'ễ': 'ᓭˆᐞ', 'ệ': 'ᓭˆ⬝',
+  'ì': '⋮ᐠ', 'í': '⋮ᐟ', 'ỉ': '⋮ᐝ', 'ĩ': '⋮ᐞ', 'ị': '⋮⬝',
+  'ò': 'ᗝᐠ', 'ó': 'ᗝᐟ', 'ỏ': 'ᗝᐝ', 'õ': 'ᗝᐞ', 'ọ': 'ᗝ⬝',
+  'ô': 'ᗝˆ', 'ồ': 'ᗝˆᐠ', 'ố': 'ᗝˆᐟ', 'ổ': 'ᗝˆᐝ', 'ỗ': 'ᗝˆᐞ', 'ộ': 'ᗝˆ⬝',
+  'ơ': 'ᗝˇ', 'ờ': 'ᗝˇᐠ', 'ớ': 'ᗝˇᐟ', 'ở': 'ᗝˇᐝ', 'ỡ': 'ᗝˇᐞ', 'ợ': 'ᗝˇ⬝',
+  'ù': '⚍ᐠ', 'ú': '⚍ᐟ', 'ủ': '⚍ᐝ', 'ũ': '⚍ᐞ', 'ụ': '⚍⬝',
+  'ư': '⚍ˇ', 'ừ': '⚍ˇᐠ', 'ứ': '⚍ˇᐟ', 'ử': '⚍ˇᐝ', 'ữ': '⚍ˇᐞ', 'ự': '⚍ˇ⬝',
+  'ỳ': 'ꖎᐠ', 'ý': 'ꖎᐟ', 'ỷ': 'ꖎᐝ', 'ỹ': 'ꖎᐞ', 'ỵ': 'ꖎ⬝'
+};
+
+// Build reverse dictionary sorted by token length descending
+const REVERSE_ALIEN_MAP = (() => {
+  const map = new Map();
+  for (const [char, rune] of Object.entries(ALIEN_VIETNAMESE_VOWELS)) {
+    map.set(rune, char.toUpperCase());
+  }
+  for (const [char, rune] of Object.entries(ALIEN_CHAR_MAP)) {
+    map.set(rune, char);
+  }
+  return Array.from(map.entries()).sort((a, b) => b[0].length - a[0].length);
+})();
+
+function textToAlien(text) {
+  if (!text) return '';
+  const lines = text.split('\n');
+  return lines.map(line => {
+    if (!line.trim()) return '';
+    const words = line.trim().split(/\s+/);
+    return words.map(word => {
+      let alienWord = '';
+      for (let i = 0; i < word.length; i++) {
+        const char = word[i];
+        const lower = char.toLowerCase();
+        const upper = char.toUpperCase();
+
+        if (ALIEN_VIETNAMESE_VOWELS[lower]) {
+          alienWord += ALIEN_VIETNAMESE_VOWELS[lower];
+        } else if (ALIEN_CHAR_MAP[upper]) {
+          alienWord += ALIEN_CHAR_MAP[upper];
+        } else {
+          alienWord += char;
+        }
+      }
+      return alienWord;
+    }).join(' • ');
+  }).join('\n');
+}
+
+function alienToText(alienStr) {
+  if (!alienStr) return '';
+  const lines = alienStr.split('\n');
+  return lines.map(line => {
+    let normalized = line.replace(/\s*•\s*/g, ' ');
+    for (const [rune, char] of REVERSE_ALIEN_MAP) {
+      normalized = normalized.replaceAll(rune, char);
+    }
+    return normalized;
+  }).join('\n');
+}
+
 function telexToVietnamese(text) {
   const sortedPairs = Object.entries(VIETNAMESE_TELEX_MAP).sort((a, b) => b[1].length - a[1].length);
   let res = text.toLowerCase();
@@ -163,7 +255,20 @@ function autoDetectAndDecode(rawInput) {
     return { typeName: 'Waiting for input...', result: '' };
   }
 
-  // 1. Morse Code: Only dots, dashes, slashes, spaces, underscores
+  // 1. Alien (Enchantment) Language detection
+  const ALIEN_RUNE_REGEX = /[⍜ᒲ⌰⊐ᓭ⍙⨅⍑⋮ᔦ⌖⊏⍝⟍ᗝᖱ⎓∷ᓵℸ⚍⍊∴ꖌꖎʖ⍿ᔑᒷᑑ⊣ᔓᔥ⌏⌑•]/;
+  if (ALIEN_RUNE_REGEX.test(input)) {
+    try {
+      const decoded = alienToText(input);
+      if (decoded && decoded.trim().length > 0) {
+        return { typeName: 'Alien (Enchantment)', result: decoded };
+      }
+    } catch (e) {
+      return { typeName: 'Alien (Enchantment)', result: `[Alien decode error: ${e.message}]` };
+    }
+  }
+
+  // 2. Morse Code: Only dots, dashes, slashes, spaces, underscores
   if (/^[.\-\s/_]+$/.test(input) && /[.\-]/.test(input)) {
     try {
       const decodedMorse = morseToText(input);
@@ -178,7 +283,7 @@ function autoDetectAndDecode(rawInput) {
     }
   }
 
-  // 2. Binary: Only 0 and 1
+  // 3. Binary: Only 0 and 1
   const binaryClean = input.replace(/\s+/g, '');
   if (/^[01]+$/.test(binaryClean) && binaryClean.length >= 8) {
     try {
@@ -189,7 +294,7 @@ function autoDetectAndDecode(rawInput) {
     }
   }
 
-  // 3. Hex: Byte pairs with spaces or even hex characters
+  // 4. Hex: Byte pairs with spaces or even hex characters
   const cleanHex = input.replace(/0x/gi, '').replace(/\s+/g, '');
   const isHexOnly = /^[0-9a-fA-F]+$/.test(cleanHex);
   const hasHexSpacing = /^([0-9a-fA-F]{2}[\s]+)+[0-9a-fA-F]{2}$/.test(input);
@@ -203,7 +308,7 @@ function autoDetectAndDecode(rawInput) {
     } catch (e) {}
   }
 
-  // 4. Base64
+  // 5. Base64
   const cleanB64 = input.replace(/\s+/g, '');
   if (/^[A-Za-z0-9+/=]+$/.test(cleanB64) && cleanB64.length % 4 === 0) {
     try {
@@ -214,7 +319,7 @@ function autoDetectAndDecode(rawInput) {
     } catch (e) {}
   }
 
-  // 5. Fallback attempts
+  // 6. Fallback attempts
   try {
     const decodedB64 = base64ToText(cleanB64);
     if (decodedB64 && !/[\uFFFD]/.test(decodedB64)) {
@@ -253,7 +358,7 @@ class MorseAudioPlayer {
     }
   }
 
-  playTone(duration) {
+  playTone(duration, customFreq = null) {
     return new Promise((resolve) => {
       if (!this.isPlaying || !this.ctx) return resolve();
       try {
@@ -261,7 +366,7 @@ class MorseAudioPlayer {
         const gain = this.ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(this.frequency, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(customFreq || this.frequency, this.ctx.currentTime);
 
         gain.gain.setValueAtTime(0, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.2, this.ctx.currentTime + 0.005);
@@ -306,6 +411,28 @@ class MorseAudioPlayer {
       } else if (c === '/') {
         await this.sleep(this.dotDuration * 5);
       }
+    }
+
+    this.isPlaying = false;
+    if (onFinish) onFinish();
+  }
+
+  async playAlien(alienText, onFinish) {
+    this.stop();
+    this.unlock();
+    this.isPlaying = true;
+
+    // Filter runes ignoring spaces and word separators
+    const runes = Array.from(alienText).filter(c => c !== ' ' && c !== '•' && c !== '\n');
+    // Cosmic Pentatonic scale in Hz
+    const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
+
+    for (let i = 0; i < runes.length; i++) {
+      if (!this.isPlaying) break;
+      const runeCode = runes[i].codePointAt(0);
+      const freq = scale[runeCode % scale.length];
+      await this.playTone(75, freq);
+      await this.sleep(25);
     }
 
     this.isPlaying = false;
@@ -408,6 +535,8 @@ document.addEventListener('DOMContentLoaded', () => {
         result = textToBase64(text);
       } else if (currentFormat === 'hex') {
         result = textToHex(text);
+      } else if (currentFormat === 'alien') {
+        result = textToAlien(text);
       }
       setOutputText(result);
     } catch (err) {
@@ -430,6 +559,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (type === 'morse') {
         btnPlayMorse.classList.remove('hidden');
+        btnPlayMorse.textContent = 'Play Morse';
+      } else if (type === 'alien') {
+        btnPlayMorse.classList.remove('hidden');
+        btnPlayMorse.textContent = 'Play Chant';
       } else {
         btnPlayMorse.classList.add('hidden');
         btnStopMorse.classList.add('hidden');
@@ -518,9 +651,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Play Morse Sound
+  // Play Sound (Morse / Alien)
   btnPlayMorse.addEventListener('click', () => {
     player.unlock();
+
+    if (currentFormat === 'alien') {
+      const alienCode = textToAlien(sourceInput.value);
+      if (!alienCode || !alienCode.trim()) {
+        showToast('No Alien text to play');
+        return;
+      }
+      btnPlayMorse.classList.add('hidden');
+      btnStopMorse.classList.remove('hidden');
+      player.playAlien(alienCode, () => {
+        btnPlayMorse.classList.remove('hidden');
+        btnStopMorse.classList.add('hidden');
+      });
+      return;
+    }
+
     const code = textToMorse(sourceInput.value, morseVietnameseMode ? morseVietnameseMode.value : 'telex');
     if (!code || !code.trim()) {
       showToast('No Morse code to play');
