@@ -227,9 +227,10 @@ body {
 }
 
 /* Textareas & Inputs */
-textarea, select {
-  font-family: inherit;
+textarea {
+  font-family: var(--font-mono) !important;
   font-size: 16px !important; /* Chuẩn iOS tránh Safari tự động phóng to màn hình */
+  line-height: 1.55;
   color: var(--text-main);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
@@ -239,6 +240,26 @@ textarea, select {
   padding: 0.75rem;
   outline: none;
   resize: vertical;
+  transition: border-color 0.15s ease;
+}
+
+textarea::placeholder {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+select {
+  font-family: var(--font-sans);
+  font-size: 16px !important;
+  color: var(--text-main);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  max-width: 100%;
+  padding: 0.5rem 0.65rem;
+  outline: none;
   transition: border-color 0.15s ease;
 }
 
@@ -364,7 +385,6 @@ textarea:focus, select:focus {
 
 .decoder-fields textarea {
   font-family: var(--font-mono);
-  font-size: 0.875rem;
 }
 
 /* Toast */
