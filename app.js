@@ -707,12 +707,9 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
 
-      if (type === 'morse') {
+      if (type === 'morse' || type === 'alien') {
         btnPlayMorse.classList.remove('hidden');
-        btnPlayMorse.textContent = 'Play Morse';
-      } else if (type === 'alien') {
-        btnPlayMorse.classList.remove('hidden');
-        btnPlayMorse.textContent = 'Play Zip-Zip';
+        btnPlayMorse.textContent = 'Sound';
       } else {
         btnPlayMorse.classList.add('hidden');
         btnStopMorse.classList.add('hidden');

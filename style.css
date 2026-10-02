@@ -291,12 +291,12 @@ textarea:focus, select:focus {
   max-width: 100%;
 }
 
-/* Format Tabs Selector (Thu gọn kiểu mới hiện) */
+/* Format Tabs Selector */
 .format-tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.45rem;
   background: var(--bg-code);
-  padding: 0.25rem;
+  padding: 0.35rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   margin-bottom: 0.75rem;
@@ -314,13 +314,12 @@ textarea:focus, select:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  flex: 1 1 0;
-  min-width: fit-content;
+  gap: 0.4rem;
+  flex: 0 0 auto;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  padding: 0.45rem 0.35rem;
+  padding: 0.5rem 1rem;
   background: transparent;
   border: none;
   color: var(--text-muted);
