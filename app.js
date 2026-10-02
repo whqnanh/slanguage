@@ -358,7 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const decodeInput = document.getElementById('decodeInput');
   const decodeOutput = document.getElementById('decodeOutput');
-  const detectedTypeBadge = document.getElementById('detectedTypeBadge');
   const btnDecodePaste = document.getElementById('btnDecodePaste');
   const btnDecodeClear = document.getElementById('btnDecodeClear');
   const btnDecodeCopy = document.getElementById('btnDecodeCopy');
@@ -455,15 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Run Auto Decoder
   function runDecoder() {
     const input = decodeInput.value;
-    const { typeName, result } = autoDetectAndDecode(input);
-    if (detectedTypeBadge) {
-      detectedTypeBadge.textContent = typeName;
-      if (typeName !== 'Waiting for input...' && typeName !== 'Unknown format') {
-        detectedTypeBadge.classList.add('active');
-      } else {
-        detectedTypeBadge.classList.remove('active');
-      }
-    }
+    const { result } = autoDetectAndDecode(input);
     if (decodeOutput) {
       decodeOutput.value = result;
     }
@@ -569,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('theme', newTheme);
   });
 
-  // Initial demo data
-  sourceInput.value = 'Hello World! Xin chao Vietnam.';
+  // Start with clean empty input
+  sourceInput.value = '';
   updateActiveOutput();
 });

@@ -341,32 +341,6 @@ textarea:focus, select:focus {
 }
 
 /* Decoder Section */
-.detected-badge-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  margin-top: 0.2rem;
-}
-
-.detected-label {
-  color: var(--text-muted);
-}
-
-.detected-badge {
-  font-family: var(--font-mono);
-  font-size: 0.775rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-sm);
-  background: var(--bg-code);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-}
-
-.detected-badge.active {
-  border-color: var(--border-focus);
-}
 
 .decoder-fields {
   display: flex;
