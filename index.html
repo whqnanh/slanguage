@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="+slanguage">
-  <title>+slanguage - Chuyển đổi mã hóa văn bản</title>
+  <title>+slanguage - Text Encoding &amp; Decoding Tool</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' font-size='60' font-family='monospace' font-weight='bold' fill='white' text-anchor='middle'>+</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,10 +19,10 @@
     <header class="header">
       <div class="title-group">
         <h1 class="main-title">+slanguage</h1>
-        <p class="subtitle">Chuyển đổi tiếng Việt sang Morse, Nhị phân, Base64, Hex và tự động dịch ngược.</p>
+        <p class="subtitle">Convert text to Morse, Binary, Base64, Hex &amp; auto-decode instantly.</p>
       </div>
       <div class="header-actions">
-        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Đổi giao diện">Sáng / Tối</button>
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle theme">Dark / Light</button>
       </div>
     </header>
 
@@ -30,40 +30,40 @@
       <!-- Input Panel -->
       <section class="card input-card">
         <div class="card-header">
-          <label for="sourceInput" class="section-label">Văn bản đầu vào</label>
+          <label for="sourceInput" class="section-label">Input Text</label>
           <div class="actions-group">
-            <button id="btnClear" class="btn btn-sm btn-ghost" type="button">Xóa</button>
-            <button id="btnPaste" class="btn btn-sm btn-ghost" type="button">Dán</button>
+            <button id="btnClear" class="btn btn-sm btn-ghost" type="button">Clear</button>
+            <button id="btnPaste" class="btn btn-sm btn-ghost" type="button">Paste</button>
           </div>
         </div>
-        <textarea id="sourceInput" placeholder="Nhập hoặc dán văn bản tiếng Việt tại đây..." rows="5" spellcheck="false"></textarea>
+        <textarea id="sourceInput" placeholder="Type or paste text here (supports English &amp; Vietnamese accents)..." rows="5" spellcheck="false"></textarea>
         
         <div class="input-options">
           <div class="option-item">
-            <label for="morseVietnameseMode">Quy tắc mã Morse tiếng Việt:</label>
+            <label for="morseVietnameseMode">Vietnamese Morse Rules:</label>
             <select id="morseVietnameseMode" class="select-control">
-              <option value="telex">Kiểu Telex viễn thông (Ví dụ: Ơ -> OW, Đ -> DD, Á -> AS)</option>
-              <option value="strip">Bỏ dấu tiếng Việt (Ví dụ: Tiếng Việt -> TIENG VIET)</option>
+              <option value="telex">Telecom Telex (e.g. Ơ -> OW, Đ -> DD, Á -> AS)</option>
+              <option value="strip">Remove Accents (e.g. Tiếng Việt -> TIENG VIET)</option>
             </select>
           </div>
         </div>
       </section>
 
-      <!-- Compact Output Panel (Chọn kiểu mới hiện) -->
+      <!-- Compact Output Panel (Tabbed) -->
       <section class="card output-card">
         <div class="card-header">
-          <label class="section-label">Kết quả chuyển đổi</label>
+          <label class="section-label">Converted Output</label>
           <div class="actions-group">
-            <button id="btnPlayMorse" class="btn btn-sm btn-outline" type="button">Phát âm</button>
-            <button id="btnStopMorse" class="btn btn-sm btn-ghost hidden" type="button">Dừng</button>
-            <button id="btnCopyActive" class="btn btn-sm btn-primary" type="button">Sao chép</button>
+            <button id="btnPlayMorse" class="btn btn-sm btn-outline" type="button">Play Sound</button>
+            <button id="btnStopMorse" class="btn btn-sm btn-ghost hidden" type="button">Stop</button>
+            <button id="btnCopyActive" class="btn btn-sm btn-primary" type="button">Copy</button>
           </div>
         </div>
 
         <!-- Format Selector Tabs -->
         <div class="format-tabs" role="tablist">
-          <button class="tab-btn active" data-type="morse" type="button" role="tab" aria-selected="true">Mã Morse</button>
-          <button class="tab-btn" data-type="binary" type="button" role="tab" aria-selected="false">Nhị phân</button>
+          <button class="tab-btn active" data-type="morse" type="button" role="tab" aria-selected="true">Morse Code</button>
+          <button class="tab-btn" data-type="binary" type="button" role="tab" aria-selected="false">Binary</button>
           <button class="tab-btn" data-type="base64" type="button" role="tab" aria-selected="false">Base64</button>
           <button class="tab-btn" data-type="hex" type="button" role="tab" aria-selected="false">Hex</button>
         </div>
@@ -73,40 +73,40 @@
         </div>
       </section>
 
-      <!-- Reverse Decoder Section (Có nút Dán và Xóa) -->
+      <!-- Reverse Decoder Section -->
       <section class="card decoder-card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">Dịch ngược ra văn bản</h2>
+            <h2 class="card-title">Auto Decoder</h2>
             <div class="detected-badge-wrap">
-              <span class="detected-label">Nhận diện:</span>
-              <span id="detectedTypeBadge" class="detected-badge">Chờ dữ liệu...</span>
+              <span class="detected-label">Detected:</span>
+              <span id="detectedTypeBadge" class="detected-badge">Waiting for input...</span>
             </div>
           </div>
           <div class="actions-group">
-            <button id="btnDecodePaste" class="btn btn-sm btn-ghost" type="button">Dán</button>
-            <button id="btnDecodeClear" class="btn btn-sm btn-ghost" type="button">Xóa</button>
-            <button id="btnDecodeCopy" class="btn btn-sm btn-primary" type="button">Sao chép</button>
+            <button id="btnDecodePaste" class="btn btn-sm btn-ghost" type="button">Paste</button>
+            <button id="btnDecodeClear" class="btn btn-sm btn-ghost" type="button">Clear</button>
+            <button id="btnDecodeCopy" class="btn btn-sm btn-primary" type="button">Copy</button>
           </div>
         </div>
 
         <div class="decoder-fields">
           <div class="field-group">
-            <label for="decodeInput" class="field-label">Mã cần dịch:</label>
-            <textarea id="decodeInput" placeholder="Dán mã Morse (... --- ...), Nhị phân, Base64 hoặc Hex vào đây..." rows="3" spellcheck="false"></textarea>
+            <label for="decodeInput" class="field-label">Code to decode:</label>
+            <textarea id="decodeInput" placeholder="Paste Morse (... --- ...), Binary, Base64, or Hex here..." rows="3" spellcheck="false"></textarea>
           </div>
           <div class="field-group">
-            <label for="decodeOutput" class="field-label">Kết quả dịch:</label>
-            <textarea id="decodeOutput" readonly rows="3" placeholder="Kết quả tự động dịch sẽ hiện ở đây..."></textarea>
+            <label for="decodeOutput" class="field-label">Decoded text:</label>
+            <textarea id="decodeOutput" readonly rows="3" placeholder="Decoded result will appear here automatically..."></textarea>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <span>Được tối ưu cho tiếng Việt đầy đủ dấu (Unicode / UTF-8)</span>
+      <span>Fast client-side processing • Privacy protected</span>
       <span class="dot-separator">•</span>
-      <span>Xử lý trực tiếp trên trình duyệt, không gửi dữ liệu ra ngoài</span>
+      <span>No data sent to external servers</span>
     </footer>
   </div>
 
