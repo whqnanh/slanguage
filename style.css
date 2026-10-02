@@ -311,6 +311,10 @@ textarea:focus, select:focus {
 }
 
 .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   flex: 1 1 0;
   min-width: fit-content;
   font-family: inherit;
@@ -325,6 +329,14 @@ textarea:focus, select:focus {
   text-align: center;
   transition: all 0.15s ease;
   white-space: nowrap;
+}
+
+.tab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  display: inline-block;
 }
 
 .tab-btn:hover {
