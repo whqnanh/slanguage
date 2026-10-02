@@ -159,6 +159,35 @@
     </footer>
   </div>
 
+  <!-- Cửa sổ nổi Mini (Widget) cho điện thoại iPhone và Desktop -->
+  <aside id="floatingMiniWidget" class="floating-widget hidden" aria-label="Cửa sổ nổi mini">
+    <div class="floating-header">
+      <span class="floating-brand">+slanguage Mini</span>
+      <div class="floating-controls">
+        <button id="btnFloatingPaste" class="btn btn-xs btn-primary" type="button">Dán nhanh</button>
+        <button id="btnFloatingClose" class="btn btn-xs btn-ghost" type="button" aria-label="Đóng">✕</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <input type="text" id="floatingInput" placeholder="Dán hoặc gõ văn bản..." spellcheck="false">
+      <div class="floating-output-row">
+        <span class="floating-tag">Morse</span>
+        <span id="floatingMorse" class="floating-val">---</span>
+        <button class="btn btn-xs btn-outline copy-btn" data-target="floatingMorse" type="button">Chép</button>
+      </div>
+      <div class="floating-output-row">
+        <span class="floating-tag">Nhị phân</span>
+        <span id="floatingBinary" class="floating-val">---</span>
+        <button class="btn btn-xs btn-outline copy-btn" data-target="floatingBinary" type="button">Chép</button>
+      </div>
+      <div class="floating-output-row">
+        <span class="floating-tag">Base64</span>
+        <span id="floatingBase64" class="floating-val">---</span>
+        <button class="btn btn-xs btn-outline copy-btn" data-target="floatingBase64" type="button">Chép</button>
+      </div>
+    </div>
+  </aside>
+
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <!-- Elements hỗ trợ Picture-in-Picture trên iPhone / Web -->

@@ -57,10 +57,18 @@
   --toast-text: #f9fafb;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  min-width: 0;
+}
+
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
 }
 
 body {
@@ -69,7 +77,7 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   min-height: 100vh;
-  padding: max(1.5rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  padding: max(1.25rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -222,28 +230,29 @@ textarea:focus, select:focus {
   border-color: var(--border-focus);
 }
 
-.select-control {
-  padding: 0.4rem 0.65rem;
-  font-size: 0.85rem;
-  max-width: 380px;
-}
-
 .input-options {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px dashed var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .option-item {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   font-size: 0.85rem;
   color: var(--text-muted);
+  width: 100%;
+}
+
+.select-control {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Results Grid */
@@ -411,6 +420,100 @@ textarea:focus, select:focus {
   pointer-events: none;
 }
 
+/* Floating Mini Widget (Cửa sổ nổi ghim trên màn hình cho iPhone & Web) */
+.floating-widget {
+  position: fixed;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  right: max(0.85rem, env(safe-area-inset-right));
+  width: calc(100% - 1.7rem);
+  max-width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideUpWidget 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpWidget {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.floating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.4rem;
+}
+
+.floating-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.floating-controls {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.floating-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.floating-body input {
+  padding: 0.45rem 0.65rem;
+  font-size: 16px !important;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.floating-output-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-code);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.5rem;
+  gap: 0.5rem;
+}
+
+.floating-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 60px;
+}
+
+.floating-val {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.btn-xs {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+
 /* iPhone / Mobile Optimizations */
 @media (max-width: 640px) {
   body {
@@ -433,6 +536,17 @@ textarea:focus, select:focus {
     gap: 0.5rem;
   }
 
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .actions-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .main-title {
     font-size: 1.45rem;
   }
@@ -447,7 +561,7 @@ textarea:focus, select:focus {
   }
 
   .card {
-    padding: 1rem;
+    padding: 0.85rem;
   }
 
   .btn {
@@ -458,20 +572,9 @@ textarea:focus, select:focus {
     padding: 0.35rem 0.65rem;
   }
 
-  .select-control {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .option-item {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-  }
-
   .code-box {
     font-size: 0.82rem;
-    min-height: 90px;
+    min-height: 85px;
     padding: 0.65rem;
   }
 }

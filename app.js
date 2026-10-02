@@ -349,6 +349,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const pipCanvas = document.getElementById('pipCanvas');
   const pipVideo = document.getElementById('pipVideo');
 
+  const floatingMiniWidget = document.getElementById('floatingMiniWidget');
+  const floatingInput = document.getElementById('floatingInput');
+  const floatingMorse = document.getElementById('floatingMorse');
+  const floatingBinary = document.getElementById('floatingBinary');
+  const floatingBase64 = document.getElementById('floatingBase64');
+  const btnFloatingClose = document.getElementById('btnFloatingClose');
+  const btnFloatingPaste = document.getElementById('btnFloatingPaste');
+
   const player = new MorseAudioPlayer();
 
   function showToast(message) {
@@ -434,55 +442,104 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function updateFloatingWidget(text) {
+    if (!floatingMorse) return;
+    const mode = morseVietnameseMode ? morseVietnameseMode.value : 'telex';
+    if (!text || !text.trim()) {
+      floatingMorse.textContent = '---';
+      floatingBinary.textContent = '---';
+      floatingBase64.textContent = '---';
+      return;
+    }
+    try {
+      floatingMorse.textContent = textToMorse(text, mode);
+      floatingBinary.textContent = textToBinary(text);
+      floatingBase64.textContent = textToBase64(text);
+    } catch (e) {}
+  }
+
   let pipStream = null;
   async function togglePictureInPicture() {
-    if (!pipVideo || !pipCanvas) return;
-
     drawPipCanvas();
 
-    // Nếu đang ở chế độ PiP thì tắt
-    if (document.pictureInPictureElement) {
-      try {
-        await document.exitPictureInPicture();
-      } catch (e) {}
-      return;
-    }
-    if (pipVideo.webkitPresentationMode === 'picture-in-picture') {
-      try {
-        pipVideo.webkitSetPresentationMode('inline');
-      } catch (e) {}
-      return;
-    }
-
-    if (!pipStream) {
-      if (pipCanvas.captureStream) {
-        pipStream = pipCanvas.captureStream(15);
-      } else if (pipCanvas.mozCaptureStream) {
-        pipStream = pipCanvas.mozCaptureStream(15);
+    // 1. Luôn kích hoạt thanh công cụ nổi Mini (Floating Widget) phù hợp 100% cho iPhone & Mobile
+    if (floatingMiniWidget) {
+      const isHidden = floatingMiniWidget.classList.contains('hidden');
+      floatingMiniWidget.classList.toggle('hidden');
+      if (isHidden) {
+        floatingInput.value = sourceInput.value;
+        updateFloatingWidget(sourceInput.value);
+        showToast('Đã mở cửa sổ nổi Mini');
+        setTimeout(() => {
+          if (floatingInput) floatingInput.focus();
+        }, 150);
       }
     }
 
-    if (!pipStream) {
-      showToast('Trình duyệt chưa hỗ trợ phát stream video PiP.');
-      return;
+    // 2. Nếu trình duyệt hỗ trợ Document Picture-in-Picture chuẩn W3C (Chrome/Edge/Desktop)
+    if ('documentPictureInPicture' in window) {
+      try {
+        if (!window.documentPictureInPicture.window) {
+          const pipWin = await window.documentPictureInPicture.requestWindow({
+            width: 360,
+            height: 420
+          });
+          document.querySelectorAll('link[rel="stylesheet"], style').forEach(el => {
+            pipWin.document.head.appendChild(el.cloneNode(true));
+          });
+          pipWin.document.body.innerHTML = `
+            <div style="padding: 1rem; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #f8fafc; min-height: 100vh; box-sizing: border-box;">
+              <h4 style="margin-bottom: 0.5rem; font-family: monospace; color: #38bdf8;">+slanguage PiP</h4>
+              <input id="pInput" style="width: 100%; box-sizing: border-box; padding: 0.5rem; margin-bottom: 0.75rem; border-radius: 4px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 14px;" placeholder="Gõ văn bản..." value="${sourceInput.value}">
+              <div style="font-size: 13px; margin-bottom: 0.4rem; color: #38bdf8;"><strong>Morse:</strong> <span id="pMorse">---</span></div>
+              <div style="font-size: 13px; margin-bottom: 0.4rem; color: #c084fc;"><strong>Nhị phân:</strong> <span id="pBin">---</span></div>
+              <div style="font-size: 13px; color: #34d399;"><strong>Base64:</strong> <span id="pB64">---</span></div>
+            </div>
+          `;
+          const pInput = pipWin.document.getElementById('pInput');
+          const pMorse = pipWin.document.getElementById('pMorse');
+          const pBin = pipWin.document.getElementById('pBin');
+          const pB64 = pipWin.document.getElementById('pB64');
+          function updatePipWin(val) {
+            pMorse.textContent = textToMorse(val, 'telex') || '---';
+            pBin.textContent = textToBinary(val) || '---';
+            pB64.textContent = textToBase64(val) || '---';
+          }
+          updatePipWin(sourceInput.value);
+          pInput.addEventListener('input', (e) => {
+            sourceInput.value = e.target.value;
+            updateEncodings();
+            updatePipWin(e.target.value);
+          });
+          return;
+        }
+      } catch (err) {}
     }
 
-    pipVideo.srcObject = pipStream;
-
-    try {
-      await pipVideo.play();
-      if (pipVideo.requestPictureInPicture) {
-        await pipVideo.requestPictureInPicture();
-        showToast('Đã mở cửa sổ nổi');
-      } else if (pipVideo.webkitSetPresentationMode) {
-        pipVideo.webkitSetPresentationMode('picture-in-picture');
-        showToast('Đã mở cửa sổ nổi trên iPhone');
-      } else {
-        showToast('Thiết bị chưa hỗ trợ Picture-in-Picture');
+    // 3. Với video canvas PiP
+    if (pipVideo && pipCanvas) {
+      if (document.pictureInPictureElement) {
+        try { await document.exitPictureInPicture(); } catch (e) {}
+        return;
       }
-    } catch (err) {
-      console.error('Lỗi PiP:', err);
-      showToast('Không thể bật PiP: ' + (err.message || 'Hãy chạm màn hình và thử lại'));
+      if (pipVideo.webkitPresentationMode === 'picture-in-picture') {
+        try { pipVideo.webkitSetPresentationMode('inline'); } catch (e) {}
+        return;
+      }
+      try {
+        if (!pipStream) {
+          if (pipCanvas.captureStream) pipStream = pipCanvas.captureStream(15);
+        }
+        if (pipStream) {
+          pipVideo.srcObject = pipStream;
+          await pipVideo.play();
+          if (pipVideo.requestPictureInPicture) {
+            await pipVideo.requestPictureInPicture();
+          } else if (pipVideo.webkitSetPresentationMode) {
+            pipVideo.webkitSetPresentationMode('picture-in-picture');
+          }
+        }
+      } catch (err) {}
     }
   }
 
@@ -524,11 +581,50 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Lắng nghe sự kiện gõ phím
-  sourceInput.addEventListener('input', updateEncodings);
-  morseVietnameseMode.addEventListener('change', updateEncodings);
+  sourceInput.addEventListener('input', () => {
+    updateEncodings();
+    if (floatingInput && document.activeElement !== floatingInput) {
+      floatingInput.value = sourceInput.value;
+      updateFloatingWidget(sourceInput.value);
+    }
+  });
+  morseVietnameseMode.addEventListener('change', () => {
+    updateEncodings();
+    updateFloatingWidget(sourceInput.value);
+  });
   decodeInput.addEventListener('input', handleDecoderInput);
+
   if (btnPiP) {
     btnPiP.addEventListener('click', togglePictureInPicture);
+  }
+
+  if (floatingInput) {
+    floatingInput.addEventListener('input', (e) => {
+      sourceInput.value = e.target.value;
+      updateEncodings();
+      updateFloatingWidget(e.target.value);
+    });
+  }
+
+  if (btnFloatingPaste) {
+    btnFloatingPaste.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        floatingInput.value = text;
+        sourceInput.value = text;
+        updateEncodings();
+        updateFloatingWidget(text);
+        showToast('Đã dán và chuyển đổi');
+      } catch {
+        showToast('Không đọc được bộ nhớ tạm. Hãy chạm vào ô để dán.');
+      }
+    });
+  }
+
+  if (btnFloatingClose) {
+    btnFloatingClose.addEventListener('click', () => {
+      if (floatingMiniWidget) floatingMiniWidget.classList.add('hidden');
+    });
   }
 
   // Nút tiện ích
