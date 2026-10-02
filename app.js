@@ -346,6 +346,10 @@ class MorseAudioPlayer {
     this.isPlaying = false;
     this.dotDuration = 60; // ms
     this.frequency = 650;  // Hz
+    this.alienBuffer = null;
+    this.alienSource = null;
+    this.alienGain = null;
+    this.stopTimeout = null;
   }
 
   unlock() {
@@ -355,6 +359,24 @@ class MorseAudioPlayer {
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
+    }
+    this.loadAlienAudio();
+  }
+
+  async loadAlienAudio() {
+    if (this.alienBuffer) return;
+    try {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+      }
+      const res = await fetch('sound/alien.mp3');
+      if (res.ok) {
+        const arrayBuf = await res.arrayBuffer();
+        this.alienBuffer = await this.ctx.decodeAudioData(arrayBuf);
+      }
+    } catch (e) {
+      console.warn('Could not load sound/alien.mp3, will use synthesizer fallback:', e);
     }
   }
 
@@ -475,12 +497,62 @@ class MorseAudioPlayer {
     this.unlock();
     this.isPlaying = true;
 
-    const runes = Array.from(alienText);
+    // Filter meaningful runes for length calculation
+    const runes = Array.from(alienText).filter(c => c !== ' ' && c !== '•' && c !== '\n');
+    const runeCount = runes.length || 1;
+
+    // Calculate natural playback duration based on text length:
+    // ~180ms per character with a 0.5s baseline, minimum 1.0s
+    const targetDurationSec = Math.max(1.0, 0.5 + (runeCount * 0.18));
+
+    // Try playing the user's MP3 file cut to text length
+    if (this.alienBuffer && this.ctx) {
+      try {
+        const source = this.ctx.createBufferSource();
+        const gain = this.ctx.createGain();
+
+        source.buffer = this.alienBuffer;
+        // Loop if the text is longer than the file itself
+        source.loop = (targetDurationSec > this.alienBuffer.duration);
+
+        source.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        const now = this.ctx.currentTime;
+        const fadeOutDuration = Math.min(0.25, targetDurationSec * 0.2);
+
+        // Smooth fade-in
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(1, now + 0.05);
+
+        // Smooth fade-out at the calculated text cut point
+        gain.gain.setValueAtTime(1, now + targetDurationSec - fadeOutDuration);
+        gain.gain.linearRampToValueAtTime(0, now + targetDurationSec);
+
+        source.start(now);
+        source.stop(now + targetDurationSec);
+
+        this.alienSource = source;
+        this.alienGain = gain;
+
+        this.stopTimeout = setTimeout(() => {
+          this.isPlaying = false;
+          if (onFinish) onFinish();
+        }, targetDurationSec * 1000);
+
+        return;
+      } catch (e) {
+        console.warn('MP3 playback failed, falling back to synth:', e);
+      }
+    }
+
+    // Synthesizer Fallback if MP3 is not yet ready
+    const allRunes = Array.from(alienText);
     const types = ['zip', 'zip', 'zap', 'zip', 'zop', 'zeep'];
 
-    for (let i = 0; i < runes.length; i++) {
+    for (let i = 0; i < allRunes.length; i++) {
       if (!this.isPlaying) break;
-      const char = runes[i];
+      const char = allRunes[i];
 
       if (char === '•' || char === ' ') {
         await this.sleep(120);
@@ -503,6 +575,21 @@ class MorseAudioPlayer {
 
   stop() {
     this.isPlaying = false;
+    if (this.stopTimeout) {
+      clearTimeout(this.stopTimeout);
+      this.stopTimeout = null;
+    }
+    if (this.alienSource) {
+      try {
+        if (this.alienGain && this.ctx) {
+          const now = this.ctx.currentTime;
+          this.alienGain.gain.cancelScheduledValues(now);
+          this.alienGain.gain.setValueAtTime(0, now);
+        }
+        this.alienSource.stop();
+      } catch (e) {}
+      this.alienSource = null;
+    }
   }
 }
 
@@ -555,6 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggle = document.getElementById('themeToggle');
 
   const player = new MorseAudioPlayer();
+  player.loadAlienAudio();
 
   let currentFormat = 'alien';
 
